@@ -45,16 +45,6 @@ public record DetailedFieldComparisonResult(
             return this;
         }
 
-        /**
-         * Adds a single detailed field status to the list.
-         *
-         * @param fieldStatus the detailed field status to add
-         * @return this builder instance
-         */
-        public Builder addFieldStatus(DetailedFieldStatus fieldStatus) {
-            this.fieldStatusList.add(fieldStatus);
-            return this;
-        }
 
         /**
          * Sets the number of common fields.

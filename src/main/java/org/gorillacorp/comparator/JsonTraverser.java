@@ -6,10 +6,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.IntStream;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -30,52 +27,6 @@ public final class JsonTraverser {
         throw new IllegalStateException("Utility class");
     }
 
-    /**
-     * Extracts all field names from a JSON node.
-     *
-     * @param jsonNode The JSON node to extract field names from
-     * @return A set of field names
-     */
-    public static Set<String> extractFieldNames(JsonNode jsonNode) {
-        var fields = new HashSet<String>();
-        traverse(jsonNode, "", fields);
-        return fields;
-    }
-
-
-    /**
-     * Recursively traverses a JSON node to build a list of all possible field names or paths
-     * in the given structure. Handles nested objects and arrays to generate a comprehensive
-     * list of fields with full paths.
-     *
-     * @param currentJsonNode The current JSON node being traversed. Can represent an object,
-     *                        array, or other JSON node types.
-     * @param path            The current path corresponding to the JSON node in the structure.
-     *                        Updates as traversal progresses through nested objects or arrays.
-     * @param fieldNames      A set used to collect and store the paths or field names
-     *                        encountered during traversal.
-     */
-    private static void traverse(JsonNode currentJsonNode,
-                                 String path,
-                                 Set<String> fieldNames) {
-
-        switch (currentJsonNode.getNodeType()) {
-            case OBJECT -> currentJsonNode.fieldNames().forEachRemaining(fieldName -> {
-                var fullPath = path.isEmpty() ? fieldName : path + "." + fieldName;
-                fieldNames.add(fullPath);
-                traverse(currentJsonNode.get(fieldName), fullPath, fieldNames);
-            });
-            case ARRAY -> IntStream.range(0, currentJsonNode.size())
-                .forEach(i -> {
-                    var arrayElement = currentJsonNode.get(i);
-                    var arrayPath = path + "[" + i + "]";
-                    traverse(arrayElement, arrayPath, fieldNames);
-                });
-            default -> {
-                // Handle other node types (VALUE, NULL, etc.) - no action needed
-            }
-        }
-    }
 
     /**
      * Extracts fields with their values from a JSON node.

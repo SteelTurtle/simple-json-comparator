@@ -161,26 +161,6 @@ public final class JsonComparatorOperations {
     }
 
     /**
-     * Represents the result of a status comparison between two entities, intended for use in JSON comparison operations.
-     * <p>
-     * The StatusResult record encapsulates:
-     * - The status of the comparison, indicating success, failure, or other relevant states.
-     * - The difference identified during the comparison, which provides details about discrepancies found.
-     * - A Runnable task to update a counter or perform a related action post-comparison.
-     * <p>
-     * This record is utilized within JSON comparison workflows to track the outcome, highlight discrepancies,
-     * and allow for additional processing or state updates triggered by the comparison results.
-     * <p>
-     * Fields:
-     * - status: A String representing the status of the operation (e.g., "SUCCESS", "DIFFERENT").
-     * - difference: A String describing the discrepancy or result of the comparison.
-     * - counterUpdate: A Runnable that executes an action to update a counter or perform a related handling task.
-     */
-    private record StatusResult(String status, String difference, Runnable counterUpdate) {
-    }
-
-
-    /**
      * Compares two sets of fields with corresponding values and provides a detailed comparison result.
      * The method identifies fields that are common, fields only present in one of the sets, and fields
      * with differing values.
@@ -245,5 +225,24 @@ public final class JsonComparatorOperations {
             .onlyInFile2(onlyInFile2.get())
             .differentValues(differentValues.get())
             .build();
+    }
+
+    /**
+     * Represents the result of a status comparison between two entities, intended for use in JSON comparison operations.
+     * <p>
+     * The StatusResult record encapsulates:
+     * - The status of the comparison, indicating success, failure, or other relevant states.
+     * - The difference identified during the comparison, which provides details about discrepancies found.
+     * - A Runnable task to update a counter or perform a related action post-comparison.
+     * <p>
+     * This record is utilized within JSON comparison workflows to track the outcome, highlight discrepancies,
+     * and allow for additional processing or state updates triggered by the comparison results.
+     * <p>
+     * Fields:
+     * - status: A String representing the status of the operation (e.g., "SUCCESS", "DIFFERENT").
+     * - difference: A String describing the discrepancy or result of the comparison.
+     * - counterUpdate: A Runnable that executes an action to update a counter or perform a related handling task.
+     */
+    private record StatusResult(String status, String difference, Runnable counterUpdate) {
     }
 }
