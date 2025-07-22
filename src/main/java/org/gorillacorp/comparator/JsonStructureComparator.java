@@ -1,8 +1,12 @@
 package org.gorillacorp.comparator;
 
+import org.gorillacorp.comparator.exception.CustomJsonParseException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.StructuredTaskScope;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -21,18 +25,21 @@ public class JsonStructureComparator {
         var file1Path = args[0];
         var file2Path = args[1];
         log.info("Comparing JSON structures: {} vs {}", file1Path, file2Path);
+        var startTime = System.currentTimeMillis();
 
         try {
             var areEqual = JsonComparatorOperations.compareJson(file1Path, file2Path);
-            if (areEqual) {
-                log.info("✓ JSON structures are identical");
-                System.exit(0);
-            } else {
+            if (!areEqual) {
                 log.info("✗ JSON structures are different");
                 // Show detailed differences
                 displayJsonComparisonReport(file1Path, file2Path);
-                System.exit(1);
+            } else {
+                log.info("✓ JSON structures are identical");
             }
+
+            Duration duration = Duration.ofMillis(System.currentTimeMillis() - startTime);
+            log.info("Comparison took {} seconds", duration.toSeconds());
+            System.exit(0);
         } catch (IOException e) {
             log.error("Error reading JSON files: {}", e.getMessage());
             System.exit(1);
@@ -42,21 +49,36 @@ public class JsonStructureComparator {
         }
     }
 
+
     /**
-     * Shows detailed differences between two JSON files.
+     * Displays a detailed comparison report of two JSON files.
+     * This method compares the structure and values of the given JSON files
+     * and generates a report highlighting the similarities and differences.
      *
-     * @param file1Path Path to the first JSON file
-     * @param file2Path Path to the second JSON file
-     * @throws IOException if there is an error reading the files
+     * @param file1Path the file path of the first JSON file
+     * @param file2Path the file path of the second JSON file
+     * @throws IOException if there is an issue reading the files
      */
     private static void displayJsonComparisonReport(String file1Path, String file2Path) throws IOException {
-        var jsonNodes = JsonComparatorOperations.loadJsonNodes(file1Path, file2Path);
-        var fields1Map = JsonTraverser.extractFieldsWithValues(jsonNodes[0]);
-        var fields2Map = JsonTraverser.extractFieldsWithValues(jsonNodes[1]);
-
-        var comparisonResult = JsonComparatorOperations.compareFieldsWithValues(fields1Map, fields2Map);
-        ComparisonReporter.printDetailedComparisonTable(comparisonResult);
-        ComparisonReporter.printSummaryTable(fields1Map.keySet(), fields2Map.keySet(), comparisonResult);
-        ComparisonReporter.printFilePaths(file1Path, file2Path);
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            var jsonNodes = JsonComparatorOperations.loadJsonNodes(file1Path, file2Path);
+            var fields1MapSubtask = scope.fork(() -> JsonTraverser.extractFieldsWithValues(jsonNodes[0]));
+            var fields2MapSubTask = scope.fork(() -> JsonTraverser.extractFieldsWithValues(jsonNodes[1]));
+            scope.join();
+            scope.throwIfFailed();
+            var fields1Map = fields1MapSubtask.get();
+            var fields2Map = fields2MapSubTask.get();
+            var comparisonResult = JsonComparatorOperations.compareFieldsWithValues(
+                file1Path,
+                file2Path,
+                fields1Map,
+                fields2Map
+            );
+            ComparisonReporter.printDetailedComparisonTable(comparisonResult);
+            ComparisonReporter.printSummaryTable(fields1Map.keySet(), fields2Map.keySet(), comparisonResult);
+            ComparisonReporter.printFilePaths(file1Path, file2Path);
+        } catch (ExecutionException | InterruptedException e) {
+            throw new CustomJsonParseException("Error comparing JSON files: {}", e);
+        }
     }
 }
