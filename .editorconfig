@@ -1,0 +1,103 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Java files
+[*.java]
+indent_style = space
+indent_size = 4
+max_line_length = 110
+
+
+# Maven files
+[pom.xml]
+indent_style = space
+indent_size = 4
+
+# XML files (Spring configs, etc.)
+[*.xml]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# Properties files
+[*.properties]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# YAML files (Spring Boot configs, Docker Compose, etc.)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+
+# HTML files
+[*.html]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# Markdown files
+[*.md]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+trim_trailing_whitespace = false
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+
+# Dockerfile
+[Dockerfile*]
+indent_style = space
+indent_size = 4
+
+# Docker Compose files
+[docker-compose*.yml]
+indent_style = space
+indent_size = 2
+
+# Git config files
+[.gitconfig]
+indent_style = tab
+indent_size = 4
+
+# SQL files
+[*.sql]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# Package manager files
+[package.json]
+indent_style = space
+indent_size = 2
+
+[package-lock.json]
+indent_style = space
+indent_size = 2
+insert_final_newline = false
+
+# IDE and build tool configs
+[.eslintrc.json]
+indent_style = space
+indent_size = 2
