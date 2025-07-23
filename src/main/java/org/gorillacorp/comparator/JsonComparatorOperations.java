@@ -3,6 +3,7 @@ package org.gorillacorp.comparator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gorillacorp.comparator.exception.CustomJsonParseException;
 import org.gorillacorp.comparator.model.DetailedFieldComparisonResult;
 import org.gorillacorp.comparator.model.DetailedFieldStatus;
 import org.gorillacorp.comparator.model.FieldState;
@@ -11,6 +12,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -119,23 +122,30 @@ public final class JsonComparatorOperations {
         return fieldNames;
     }
 
+
     /**
-     * Loads JSON nodes from two files.
+     * Loads and parses two JSON files, returning their contents as an array of {@code JsonNode} objects.
+     * Each JSON file is read and parsed concurrently to improve performance.
      *
-     * @param file1Path Path to the first JSON file
-     * @param file2Path Path to the second JSON file
-     * @return An array containing the two JSON nodes
-     * @throws IOException if there is an error reading the files
+     * @param file1Path the path to the first JSON file
+     * @param file2Path the path to the second JSON file
+     * @return an array of {@code JsonNode} objects, where the first element represents the parsed
+     * content of the first file and the second element represents the parsed content of the second file
+     * @throws IOException if an error occurs while reading or parsing the JSON files
      */
     public static JsonNode[] loadJsonNodes(String file1Path, String file2Path) throws IOException {
-        JsonNode json1;
-        JsonNode json2;
+
         try (var reader1 = Files.newBufferedReader(Path.of(file1Path));
-             var reader2 = Files.newBufferedReader(Path.of(file2Path))) {
-            json1 = mapper.readTree(reader1);
-            json2 = mapper.readTree(reader2);
+             var reader2 = Files.newBufferedReader(Path.of(file2Path));
+             var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            var json1Subtask = scope.fork(() -> mapper.readTree(reader1));
+            var json2Subtask = scope.fork(() -> mapper.readTree(reader2));
+            scope.join();
+            scope.throwIfFailed();
+            return new JsonNode[]{json1Subtask.get(), json2Subtask.get()};
+        } catch (ExecutionException | InterruptedException e) {
+            throw new CustomJsonParseException("Error reading JSON files", e);
         }
-        return new JsonNode[]{json1, json2};
     }
 
 
@@ -160,17 +170,22 @@ public final class JsonComparatorOperations {
         }
     }
 
+
     /**
-     * Compares two sets of fields with corresponding values and provides a detailed comparison result.
-     * The method identifies fields that are common, fields only present in one of the sets, and fields
-     * with differing values.
+     * Compares fields and values from two JSON files, identifying common fields, fields
+     * unique to each file, and fields with differing values. The method returns a
+     * detailed comparison result including metadata and status information about the fields.
      *
-     * @param fields1 the first map of field names to their corresponding values
-     * @param fields2 the second map of field names with their corresponding values
-     * @return a {@code DetailedFieldComparisonResult} containing the detailed comparison result,
-     * including lists of field statuses and summary statistics
+     * @param file1Path the file path of the first JSON file
+     * @param file2Path the file path of the second JSON file
+     * @param fields1   a map of field names and their values from the first JSON file
+     * @param fields2   a map of field names and their values from the second JSON file
+     * @return a {@code DetailedFieldComparisonResult} containing the field comparison
+     * details, including common fields, unique fields, and differing values
      */
-    public static DetailedFieldComparisonResult compareFieldsWithValues(Map<String, String> fields1,
+    public static DetailedFieldComparisonResult compareFieldsWithValues(String file1Path,
+                                                                        String file2Path,
+                                                                        Map<String, String> fields1,
                                                                         Map<String, String> fields2) {
         var allFields = new HashSet<String>();
         allFields.addAll(fields1.keySet());
@@ -179,10 +194,10 @@ public final class JsonComparatorOperations {
         var sortedFields = allFields.stream().sorted().toList();
         var fieldStatusAccumulator = new ArrayList<DetailedFieldStatus>();
 
-        AtomicInteger commonFields = new AtomicInteger();
-        AtomicInteger onlyInFile1 = new AtomicInteger();
-        AtomicInteger onlyInFile2 = new AtomicInteger();
-        AtomicInteger differentValues = new AtomicInteger();
+        var commonFields = new AtomicInteger();
+        var onlyInFile1 = new AtomicInteger();
+        var onlyInFile2 = new AtomicInteger();
+        var differentValues = new AtomicInteger();
 
         for (String field : sortedFields) {
             var fieldIsInFile1 = fields1.containsKey(field);
@@ -220,6 +235,8 @@ public final class JsonComparatorOperations {
 
         return DetailedFieldComparisonResult.builder()
             .fieldStatusList(fieldStatusAccumulator)
+            .file1Name(file1Path.substring(file1Path.lastIndexOf('/') + 1))
+            .file2Name(file2Path.substring(file2Path.lastIndexOf('/') + 1))
             .commonFields(commonFields.get())
             .onlyInFile1(onlyInFile1.get())
             .onlyInFile2(onlyInFile2.get())

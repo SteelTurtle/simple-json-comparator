@@ -9,6 +9,8 @@ import java.util.List;
  */
 public record DetailedFieldComparisonResult(
     List<DetailedFieldStatus> fieldStatusList,
+    String file1Name,
+    String file2Name,
     int commonFields,
     int onlyInFile1,
     int onlyInFile2,
@@ -29,6 +31,8 @@ public record DetailedFieldComparisonResult(
      */
     public static class Builder {
         private List<DetailedFieldStatus> fieldStatusList = new ArrayList<>();
+        private String file1Name;
+        private String file2Name;
         private int commonFields;
         private int onlyInFile1;
         private int onlyInFile2;
@@ -45,6 +49,28 @@ public record DetailedFieldComparisonResult(
             return this;
         }
 
+
+        /**
+         * Sets the name of the first file for comparison.
+         *
+         * @param file1Name the name of the first file
+         * @return this builder instance
+         */
+        public Builder file1Name(String file1Name) {
+            this.file1Name = file1Name;
+            return this;
+        }
+
+        /**
+         * Sets the name of the second file for comparison.
+         *
+         * @param file2Name the name of the second file
+         * @return this builder instance
+         */
+        public Builder file2Name(String file2Name) {
+            this.file2Name = file2Name;
+            return this;
+        }
 
         /**
          * Sets the number of common fields.
@@ -97,7 +123,9 @@ public record DetailedFieldComparisonResult(
          */
         public DetailedFieldComparisonResult build() {
             return new DetailedFieldComparisonResult(
-                List.copyOf(fieldStatusList), // Make immutable copy
+                List.copyOf(fieldStatusList),// Make immutable copy
+                file1Name,
+                file2Name,
                 commonFields,
                 onlyInFile1,
                 onlyInFile2,

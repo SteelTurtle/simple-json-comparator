@@ -1,9 +1,7 @@
 package org.gorillacorp.comparator.exception;
 
-import java.io.IOException;
-
 public class CustomJsonParseException extends RuntimeException {
-    public CustomJsonParseException(String message, IOException exception) {
+    public CustomJsonParseException(String message, Exception exception) {
         super(message, exception);
     }
 }
