@@ -1,6 +1,5 @@
 package org.gorillacorp.comparator;
 
-import org.gorillacorp.comparator.exception.CustomJsonParseException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -14,7 +13,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Main class for comparing JSON structures.
  * This class serves as the entry point for the application and orchestrates the comparison process.
  */
-public class JsonStructureComparator {
+public non-sealed class JsonStructureComparator implements StructuredScopeExceptionHandler {
     private static final Logger log = getLogger(JsonStructureComparator.class);
 
     public static void main(String... args) {
@@ -77,8 +76,8 @@ public class JsonStructureComparator {
             ComparisonReporter.printDetailedComparisonTable(comparisonResult);
             ComparisonReporter.printSummaryTable(fields1Map.keySet(), fields2Map.keySet(), comparisonResult);
             ComparisonReporter.printFilePaths(file1Path, file2Path);
-        } catch (ExecutionException | InterruptedException e) {
-            throw new CustomJsonParseException("Error comparing JSON files: {}", e);
+        } catch (ExecutionException | InterruptedException exception) {
+            StructuredScopeExceptionHandler.handleStructuredTaskScopeException(exception);
         }
     }
 }

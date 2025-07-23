@@ -3,7 +3,6 @@ package org.gorillacorp.comparator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gorillacorp.comparator.exception.CustomJsonParseException;
 import org.gorillacorp.comparator.model.DetailedFieldComparisonResult;
 import org.gorillacorp.comparator.model.DetailedFieldStatus;
 import org.gorillacorp.comparator.model.FieldState;
@@ -20,7 +19,7 @@ import java.util.stream.IntStream;
 /**
  * Utility class for comparing JSON structures.
  */
-public final class JsonComparatorOperations {
+public final class JsonComparatorOperations implements StructuredScopeExceptionHandler {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -144,7 +143,8 @@ public final class JsonComparatorOperations {
             scope.throwIfFailed();
             return new JsonNode[]{json1Subtask.get(), json2Subtask.get()};
         } catch (ExecutionException | InterruptedException e) {
-            throw new CustomJsonParseException("Error reading JSON files", e);
+            StructuredScopeExceptionHandler.handleStructuredTaskScopeException(e);
+            throw new AssertionError("This code should never be reached");
         }
     }
 
@@ -252,7 +252,7 @@ public final class JsonComparatorOperations {
      * - The difference identified during the comparison, which provides details about discrepancies found.
      * - A Runnable task to update a counter or perform a related action post-comparison.
      * <p>
-     * This record is utilized within JSON comparison workflows to track the outcome, highlight discrepancies,
+     * This record is used within JSON comparison workflows to track the outcome, highlight discrepancies,
      * and allow for additional processing or state updates triggered by the comparison results.
      * <p>
      * Fields:
