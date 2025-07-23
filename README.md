@@ -50,7 +50,7 @@ provided build-and-run script:
    cd simple-json-comparator
    ```
 
-2. **Make the script executable:**
+2. **Make the script executable (Linux/MacOS):**
    ```bash
    chmod +x comparator_run.sh
    ```
@@ -59,6 +59,16 @@ provided build-and-run script:
    ```bash
    ./comparator_run.sh file1.json file2.json
    ```
+4. **Run the script on Windows:**
+
+> There is a `comparator_run.bat` script in the root of the repository, but
+> as of today it has not yet been tested on a Windows machine.
+> :/
+> Use it at your own risk of disappointment, and please report bugs or errors;
+
+```shell
+   ./comparator_run.bat file1.json file2.json
+```
 
 ### What the Script Does
 

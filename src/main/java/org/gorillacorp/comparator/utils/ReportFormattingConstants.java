@@ -9,12 +9,7 @@ package org.gorillacorp.comparator.utils;
  * to be used throughout the application for consistent report formatting.
  */
 public final class ReportFormattingConstants {
-    public ReportFormattingConstants() {
-        throw new IllegalStateException("Utility class");
-    }
-
     public static final int SEPARATOR_WIDTH = 3; // Length of " | "
-
     // Detailed table constants
     public static final int DETAILED_FIELD_NAME_WIDTH = 40;
     public static final int DETAILED_FILE_PRESENCE_MIN_WIDTH = 8; // Minimum width for file columns
@@ -22,7 +17,6 @@ public final class ReportFormattingConstants {
     public static final int DETAILED_VALUE_WIDTH = 20;
     public static final int DETAILED_STATUS_WIDTH = 20;
     public static final int DETAILED_DIFFERENCE_WIDTH = 25;
-
     // Field name truncation constants
     public static final int FIELD_NAME_MAX_LENGTH = 37;
     public static final int FIELD_NAME_TRUNCATE_LENGTH = 34;
@@ -32,7 +26,6 @@ public final class ReportFormattingConstants {
     // File name truncation constants for column headers
     public static final int FILE_NAME_MAX_LENGTH = DETAILED_FILE_PRESENCE_MAX_WIDTH - 10; // Account for "File 1 ()" format
     public static final int FILE_NAME_TRUNCATE_LENGTH = FILE_NAME_MAX_LENGTH - 3; // Account for "..."
-
     // Summary table constants
     public static final int SUMMARY_METRIC_WIDTH = 40;
     public static final int SUMMARY_FILE_MIN_WIDTH = 15; // Minimum width for summary file columns
@@ -41,5 +34,9 @@ public final class ReportFormattingConstants {
     // Summary file name truncation constants
     public static final int SUMMARY_FILE_NAME_MAX_LENGTH = SUMMARY_FILE_MAX_WIDTH - 3; // Account for truncation
     public static final int SUMMARY_FILE_NAME_TRUNCATE_LENGTH = SUMMARY_FILE_NAME_MAX_LENGTH - 3; // Account for "..."
+
+    public ReportFormattingConstants() {
+        throw new IllegalStateException("Utility class");
+    }
 
 }

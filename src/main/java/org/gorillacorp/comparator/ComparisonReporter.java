@@ -432,5 +432,4 @@ public final class ComparisonReporter {
             }
         });
     }
-
 }
