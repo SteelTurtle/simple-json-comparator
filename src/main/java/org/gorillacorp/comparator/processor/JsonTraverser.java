@@ -129,11 +129,11 @@ public final class JsonTraverser {
 
     private static void traverseObjectFields(JsonNode objectNode, String path, Map<String, String> accumulator) {
         objectNode.fieldNames().forEachRemaining(IOExceptionConsumer.wrapIOException(
-            fieldName -> {
-                var fullPath = path.isEmpty() ? fieldName : "%s.%s".formatted(path, fieldName);
-                var fieldValue = objectNode.get(fieldName);
-                traverseWithValues(fieldValue, fullPath, accumulator);
-            })
+                fieldName -> {
+                    var fullPath = path.isEmpty() ? fieldName : "%s.%s".formatted(path, fieldName);
+                    var fieldValue = objectNode.get(fieldName);
+                    traverseWithValues(fieldValue, fullPath, accumulator);
+                })
         );
     }
 
@@ -154,11 +154,16 @@ public final class JsonTraverser {
         }
     }
 
+
     /**
-     * Converts a JSON node value to a string representation.
+     * Converts the value of the given JsonNode into its string representation.
+     * Handles different types of JsonNode, such as null, textual, numeric, boolean,
+     * objects, and arrays, returning an appropriately formatted string.
      *
-     * @param node The JSON node to convert
-     * @return A string representation of the node's value
+     * @param node The JsonNode to be converted into a string representation.
+     * @return The string representation of the given JsonNode. Returns "null" for null nodes,
+     * quoted strings for textual nodes, the appropriate string value for numeric
+     * and boolean nodes, and the default string conversion for object and array nodes.
      */
     public static String getValueAsString(JsonNode node) {
         return switch (node) {
@@ -166,8 +171,8 @@ public final class JsonTraverser {
             case JsonNode n when n.isTextual() -> "\"" + n.asText() + "\"";
             case JsonNode n when n.isNumber() -> n.asText();
             case JsonNode n when n.isBoolean() -> String.valueOf(n.asBoolean());
-            case JsonNode n when n.isObject() -> "{...}";
-            case JsonNode n when n.isArray() -> "[...]";
+            case JsonNode n when n.isObject() -> n.toString();
+            case JsonNode n when n.isArray() -> n.toString();
             default -> node.toString();
         };
     }
