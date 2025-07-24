@@ -148,6 +148,7 @@ REM Function to validate file arguments
 :validate_file_arguments
 set "file1=%~1"
 set "file2=%~2"
+set "csv_output=%~3"
 
 if not exist "%file1%" (
     call :print_error "First file does not exist: %file1%"
@@ -159,42 +160,76 @@ if not exist "%file2%" (
     exit /b 1
 )
 
-call :print_success "Both input files validated successfully"
+REM Validate CSV output file if provided
+if defined csv_output (
+    REM Check if the file ends with .csv (case insensitive)
+    set "csv_lower=!csv_output!"
+    for %%i in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do call set "csv_lower=%%csv_lower:%%i=%%i%%"
+    for %%i in (a b c d e f g h i j k l m n o p q r s t u v w x y z) do call set "csv_lower=%%csv_lower:%%i=%%i%%"
+
+    if not "!csv_lower:~-4!"==".csv" (
+        call :print_error "CSV output file must end with .csv extension: %csv_output%"
+        exit /b 1
+    )
+
+    REM Check if the output directory exists
+    for %%F in ("%csv_output%") do set "output_dir=%%~dpF"
+    if not exist "!output_dir!" (
+        call :print_error "Output directory does not exist: !output_dir!"
+        exit /b 1
+    )
+
+    call :print_success "CSV output file validated: %csv_output%"
+)
+
+call :print_success "Input files validated successfully"
 call :print_status "File 1: %file1%"
 call :print_status "File 2: %file2%"
+if defined csv_output (
+    call :print_status "CSV Output: %csv_output%"
+)
 goto :eof
 
 REM Function to run the application
 :run_application
 set "file1=%~1"
 set "file2=%~2"
+set "csv_output=%~3"
 
 call :print_status "Running the JSON Structure Comparator..."
 call :print_status "JAR file: %JAR_FILE%"
-call :print_status "Comparing: %file1% vs %file2%"
 
-java --enable-preview -jar "%JAR_FILE%" "%file1%" "%file2%"
+if defined csv_output (
+    call :print_status "Comparing: %file1% vs %file2% (exporting to CSV: %csv_output%)"
+    java --enable-preview -jar "%JAR_FILE%" "%file1%" "%file2%" -export-to-csv "%csv_output%"
+) else (
+    call :print_status "Comparing: %file1% vs %file2%"
+    java --enable-preview -jar "%JAR_FILE%" "%file1%" "%file2%"
+)
 goto :eof
 
 REM Function to show usage
 :show_usage
-echo Usage: %~n0 ^<file1^> ^<file2^>
+echo Usage: %~n0 ^<file1^> ^<file2^> [-export-to-csv ^<output.csv^>]
 echo.
 echo Arguments:
 echo   file1                   Path to the first JSON file to compare
 echo   file2                   Path to the second JSON file to compare
 echo.
 echo Options:
+echo   -export-to-csv FILE     Export comparison results to CSV file (optional)
 echo   /h, /help               Show this help message
 echo   /force-rebuild          Force rebuild even if JAR exists
 echo.
 echo Description:
 echo   This script compares the structure of two JSON files using the JSON Structure Comparator tool.
 echo   It will automatically build the application if the executable JAR file doesn't exist.
+echo   By default, results are displayed in the terminal. Use -export-to-csv to save results to a CSV file.
 echo.
 echo Examples:
 echo   %~n0 data1.json data2.json
-echo   %~n0 C:\path\to\file1.json C:\path\to\file2.json
+echo   %~n0 file1.json file2.json -export-to-csv report.csv
+echo   %~n0 C:\path\to\file1.json C:\path\to\file2.json -export-to-csv C:\path\to\output.csv
 echo   %~n0 /force-rebuild file1.json file2.json
 goto :eof
 
@@ -207,6 +242,7 @@ echo.
 
 REM Parse arguments
 set "FORCE_REBUILD=false"
+set "CSV_OUTPUT="
 set "file1="
 set "file2="
 set "argcount=0"
@@ -217,6 +253,16 @@ if /i "%~1"=="/h" goto show_help
 if /i "%~1"=="/help" goto show_help
 if /i "%~1"=="/force-rebuild" (
     set "FORCE_REBUILD=true"
+    shift
+    goto parse_args
+)
+if /i "%~1"=="-export-to-csv" (
+    if "%~2"=="" (
+        call :print_error "Missing CSV output file path after '-export-to-csv'"
+        goto show_help
+    )
+    set "CSV_OUTPUT=%~2"
+    shift
     shift
     goto parse_args
 )
@@ -250,7 +296,7 @@ call :check_java_version
 if errorlevel 1 exit /b 1
 
 REM Validate file arguments
-call :validate_file_arguments "%file1%" "%file2%"
+call :validate_file_arguments "%file1%" "%file2%" "%CSV_OUTPUT%"
 if errorlevel 1 exit /b 1
 
 REM Handle force rebuild
@@ -280,9 +326,13 @@ if "%FORCE_REBUILD%"=="true" (
 REM Run the application
 echo.
 echo =================================================
-echo   Running JSON Structure Comparison
+if defined CSV_OUTPUT (
+    echo   Running JSON Structure Comparison (CSV Export)
+) else (
+    echo   Running JSON Structure Comparison
+)
 echo =================================================
-call :run_application "%file1%" "%file2%"
+call :run_application "%file1%" "%file2%" "%CSV_OUTPUT%"
 
 goto :eof
 

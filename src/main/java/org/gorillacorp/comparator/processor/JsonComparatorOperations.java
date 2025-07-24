@@ -1,4 +1,4 @@
-package org.gorillacorp.comparator;
+package org.gorillacorp.comparator.processor;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +19,7 @@ import java.util.stream.IntStream;
 /**
  * Utility class for comparing JSON structures.
  */
-public final class JsonComparatorOperations implements StructuredScopeExceptionHandler {
+public final class JsonComparatorOperations {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -27,21 +27,30 @@ public final class JsonComparatorOperations implements StructuredScopeExceptionH
         throw new IllegalStateException("Utility class");
     }
 
+
     /**
-     * Compares two JSON files and determines if their structures are equal.
+     * Compares two JSON files to determine if their contents are equal, ignoring the order of elements
+     * in arrays and the order of fields in objects. The comparison is performed in a concurrent and
+     * efficient manner using structured task scopes.
      *
-     * @param filePath1 Path to the first JSON file
-     * @param filePath2 Path to the second JSON file
-     * @return true if the JSON structures are equal, false otherwise
-     * @throws IOException if an IO error occurs while reading any of the files
+     * @param filePath1 the file path to the first JSON file
+     * @param filePath2 the file path to the second JSON file
+     * @return true if the two JSON files are considered equal regardless of order, false otherwise
+     * @throws IOException if an error occurs while reading or parsing the JSON files
      */
     public static boolean compareJson(String filePath1, String filePath2) throws IOException {
         try (var reader1 = Files.newBufferedReader(Path.of(filePath1));
-             var reader2 = Files.newBufferedReader(Path.of(filePath2))) {
-            var jsonNode1 = mapper.readTree(reader1);
-            var jsonNode2 = mapper.readTree(reader2);
+             var reader2 = Files.newBufferedReader(Path.of(filePath2));
+             var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            var jsonNode1SubTask = scope.fork(() -> mapper.readTree(reader1));
+            var jsonNode2SubTask = scope.fork(() -> mapper.readTree(reader2));
+            scope.join();
+            scope.throwIfFailed();
 
-            return compareJsonNodesIgnoringOrder(jsonNode1, jsonNode2);
+            return compareJsonNodesIgnoringOrder(jsonNode1SubTask.get(), jsonNode2SubTask.get());
+        } catch (ExecutionException | InterruptedException exception) {
+            StructuredScopeOperationsHandler.handleStructuredTaskScopeException(exception);
+            throw new AssertionError("This code should never be reached");
         }
     }
 
@@ -143,7 +152,7 @@ public final class JsonComparatorOperations implements StructuredScopeExceptionH
             scope.throwIfFailed();
             return new JsonNode[]{json1Subtask.get(), json2Subtask.get()};
         } catch (ExecutionException | InterruptedException e) {
-            StructuredScopeExceptionHandler.handleStructuredTaskScopeException(e);
+            StructuredScopeOperationsHandler.handleStructuredTaskScopeException(e);
             throw new AssertionError("This code should never be reached");
         }
     }

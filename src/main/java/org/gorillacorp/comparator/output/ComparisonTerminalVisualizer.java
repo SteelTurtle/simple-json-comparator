@@ -1,10 +1,15 @@
-package org.gorillacorp.comparator;
+package org.gorillacorp.comparator.output;
 
 import org.gorillacorp.comparator.model.DetailedFieldComparisonResult;
 import org.gorillacorp.comparator.model.DetailedTableRowData;
+import org.gorillacorp.comparator.processor.StructuredScopeOperationsHandler;
+import org.gorillacorp.comparator.utils.FileOperations;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.StructuredTaskScope;
 
 import static org.gorillacorp.comparator.utils.ReportFormattingConstants.*;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -27,11 +32,11 @@ import static org.slf4j.LoggerFactory.getLogger;
  * ({@code DETAILED_TABLE_WIDTH} and {@code SUMMARY_TABLE_WIDTH}) are automatically
  * calculated based on the column widths and separators.
  */
-public final class ComparisonReporter {
+public final class ComparisonTerminalVisualizer {
 
-    private static final Logger log = getLogger(ComparisonReporter.class);
+    private static final Logger log = getLogger(ComparisonTerminalVisualizer.class);
 
-    private ComparisonReporter() {
+    private ComparisonTerminalVisualizer() {
         throw new IllegalStateException("Utility class");
     }
 
@@ -129,19 +134,6 @@ public final class ComparisonReporter {
             : fileName;
     }
 
-    /**
-     * Extracts just the file name from a full path.
-     *
-     * @param filePath The full file path
-     * @return Just the file name without the path
-     */
-    private static String extractFileName(String filePath) {
-        if (filePath == null) return "";
-        // Handle both Windows and Unix path separators
-        int lastSlash = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
-        return lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
-    }
-
 
     /**
      * Prints a detailed comparison table of fields with values.
@@ -169,8 +161,8 @@ public final class ComparisonReporter {
                                          Set<String> fields2,
                                          DetailedFieldComparisonResult result) {
         // Calculate the optimal column width for file names in summary
-        var file1Name = extractFileName(result.file1Name());
-        var file2Name = extractFileName(result.file2Name());
+        var file1Name = FileOperations.extractFileName(result.file1Name());
+        var file2Name = FileOperations.extractFileName(result.file2Name());
         int summaryFileWidth = calculateSummaryFileWidth(file1Name, file2Name);
         int summaryTableWidth = calculateSummaryTableWidth(summaryFileWidth);
 
@@ -286,7 +278,7 @@ public final class ComparisonReporter {
      */
     private static int calculateDisplayWidth(String text) {
         if (text == null) return 0;
-        return text.chars().map(ComparisonReporter::getCharacterDisplayWidth).sum();
+        return text.chars().map(ComparisonTerminalVisualizer::getCharacterDisplayWidth).sum();
     }
 
     /**
@@ -375,8 +367,8 @@ public final class ComparisonReporter {
     private static void printDetailedTableHeader(DetailedFieldComparisonResult result,
                                                  int filePresenceWidth) {
         int tableWidth = calculateDetailedTableWidth(filePresenceWidth);
-        var truncatedFile1Name = truncateFileName(extractFileName(result.file1Name()));
-        var truncatedFile2Name = truncateFileName(extractFileName(result.file2Name()));
+        var truncatedFile1Name = truncateFileName(FileOperations.extractFileName(result.file1Name()));
+        var truncatedFile2Name = truncateFileName(FileOperations.extractFileName(result.file2Name()));
 
         var headerData = DetailedTableRowData.Builder.builder()
             .fieldName("Field Name")
@@ -431,5 +423,35 @@ public final class ComparisonReporter {
                 log.info(formatDetailedTableRow(rowData, filePresenceWidth));
             }
         });
+    }
+
+
+    /**
+     * Displays a detailed comparison report of two JSON files.
+     * This method compares the structure and values of the given JSON files
+     * and generates a report highlighting the similarities and differences.
+     *
+     * @param file1Path the file path of the first JSON file
+     * @param file2Path the file path of the second JSON file
+     * @throws IOException if there is an issue reading the files
+     */
+    public static void displayJsonComparisonReport(String file1Path, String file2Path) throws IOException {
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            var compoundComparisonResults =
+                StructuredScopeOperationsHandler.getGetDetailedFieldsComparisonResult(
+                    file1Path,
+                    file2Path,
+                    scope
+                );
+            ComparisonTerminalVisualizer.printDetailedComparisonTable(compoundComparisonResults.comparisonResult());
+            ComparisonTerminalVisualizer.printSummaryTable(
+                compoundComparisonResults.fields1Map().keySet(),
+                compoundComparisonResults.fields2Map().keySet(),
+                compoundComparisonResults.comparisonResult()
+            );
+            ComparisonTerminalVisualizer.printFilePaths(file1Path, file2Path);
+        } catch (ExecutionException | InterruptedException exception) {
+            StructuredScopeOperationsHandler.handleStructuredTaskScopeException(exception);
+        }
     }
 }

@@ -135,6 +135,7 @@ ensure_jar_exists() {
 validate_file_arguments() {
     local file1="$1"
     local file2="$2"
+    local csv_output="$3"
 
     if [ ! -f "$file1" ]; then
         print_error "First file does not exist: $file1"
@@ -157,42 +158,77 @@ validate_file_arguments() {
         exit 1
     fi
 
-    print_success "Both input files validated successfully"
+    # Validate CSV output file if provided
+    if [ -n "$csv_output" ]; then
+        # Check if the file ends with .csv
+        if [[ ! "$csv_output" =~ \.csv$ ]]; then
+            print_error "CSV output file must end with .csv extension: $csv_output"
+            exit 1
+        fi
+
+        # Check if the output directory exists and is writable
+        local output_dir=$(dirname "$csv_output")
+        if [ ! -d "$output_dir" ]; then
+            print_error "Output directory does not exist: $output_dir"
+            exit 1
+        fi
+
+        if [ ! -w "$output_dir" ]; then
+            print_error "Output directory is not writable: $output_dir"
+            exit 1
+        fi
+
+        print_success "CSV output file validated: $csv_output"
+    fi
+
+    print_success "Input files validated successfully"
     print_status "File 1: $file1"
     print_status "File 2: $file2"
+    if [ -n "$csv_output" ]; then
+        print_status "CSV Output: $csv_output"
+    fi
 }
 
 # Function to run the application
 run_application() {
     local file1="$1"
     local file2="$2"
+    local csv_output="$3"
 
     print_status "Running the JSON Structure Comparator..."
     print_status "JAR file: $JAR_FILE"
-    print_status "Comparing: $file1 vs $file2"
 
-    java --enable-preview -jar "$JAR_FILE" "$file1" "$file2"
+    if [ -n "$csv_output" ]; then
+        print_status "Comparing: $file1 vs $file2 (exporting to CSV: $csv_output)"
+        java --enable-preview -jar "$JAR_FILE" "$file1" "$file2" -export-to-csv "$csv_output"
+    else
+        print_status "Comparing: $file1 vs $file2"
+        java --enable-preview -jar "$JAR_FILE" "$file1" "$file2"
+    fi
 }
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 <file1> <file2>"
+    echo "Usage: $0 <file1> <file2> [-export-to-csv <output.csv>]"
     echo ""
     echo "Arguments:"
     echo "  file1                   Path to the first JSON file to compare"
     echo "  file2                   Path to the second JSON file to compare"
     echo ""
     echo "Options:"
+    echo "  -export-to-csv FILE     Export comparison results to CSV file (optional)"
     echo "  -h, --help              Show this help message"
     echo "  --force-rebuild         Force rebuild even if JAR exists"
     echo ""
     echo "Description:"
     echo "  This script compares the structure of two JSON files using the JSON Structure Comparator tool."
     echo "  It will automatically build the application if the executable JAR file doesn't exist."
+    echo "  By default, results are displayed in the terminal. Use -export-to-csv to save results to a CSV file."
     echo ""
     echo "Examples:"
     echo "  $0 data1.json data2.json"
-    echo "  $0 /path/to/file1.json /path/to/file2.json"
+    echo "  $0 file1.json file2.json -export-to-csv report.csv"
+    echo "  $0 /path/to/file1.json /path/to/file2.json -export-to-csv /path/to/output.csv"
     echo "  $0 --force-rebuild file1.json file2.json"
 }
 
@@ -205,6 +241,7 @@ main() {
 
     # Parse arguments
     FORCE_REBUILD=false
+    CSV_OUTPUT=""
     FILE_ARGS=()
 
     while [[ $# -gt 0 ]]; do
@@ -216,6 +253,15 @@ main() {
             --force-rebuild)
                 FORCE_REBUILD=true
                 shift
+                ;;
+            -export-to-csv)
+                if [ -z "$2" ]; then
+                    print_error "Missing CSV output file path after '-export-to-csv'"
+                    show_usage
+                    exit 1
+                fi
+                CSV_OUTPUT="$2"
+                shift 2
                 ;;
             -*)
                 print_error "Unknown option: $1"
@@ -244,7 +290,7 @@ main() {
     check_java_version
 
     # Validate file arguments
-    validate_file_arguments "$file1" "$file2"
+    validate_file_arguments "$file1" "$file2" "$CSV_OUTPUT"
 
     # Handle force rebuild
     if [ "$FORCE_REBUILD" = true ]; then
@@ -265,9 +311,13 @@ main() {
     # Run the application
     echo ""
     echo "================================================="
-    echo "  Running JSON Structure Comparison"
+    if [ -n "$CSV_OUTPUT" ]; then
+        echo "  Running JSON Structure Comparison (CSV Export)"
+    else
+        echo "  Running JSON Structure Comparison"
+    fi
     echo "================================================="
-    run_application "$file1" "$file2"
+    run_application "$file1" "$file2" "$CSV_OUTPUT"
 }
 
 # Run the main function with all arguments
