@@ -25,25 +25,25 @@ public interface StructuredScopeOperationsHandler {
                 switch (cause) {
                     case IOException ioException -> throw ioException;
                     case RuntimeException _ -> throw new CustomJsonParseException(
-                        "Runtime error during JSON processing: %s".formatted(cause.getMessage()),
-                        executionException
+                            "Runtime error during JSON processing: %s".formatted(cause.getMessage()),
+                            executionException
                     );
                     default -> throw new CustomJsonParseException(
-                        "Unexpected error during JSON processing: %s".formatted(cause.getClass().getSimpleName()),
-                        executionException
+                            "Unexpected error during JSON processing: %s".formatted(cause.getClass().getSimpleName()),
+                            executionException
                     );
                 }
             }
             case InterruptedException interruptedException -> {
                 Thread.currentThread().interrupt();
                 throw new CustomJsonParseException(
-                    "JSON comparison was interrupted",
-                    interruptedException
+                        "JSON comparison was interrupted",
+                        interruptedException
                 );
             }
             default -> throw new CustomJsonParseException(
-                "Unexpected exception type: %s".formatted(exception.getClass().getSimpleName()),
-                exception
+                    "Unexpected exception type: %s".formatted(exception.getClass().getSimpleName()),
+                    exception
             );
         }
     }
@@ -64,10 +64,10 @@ public interface StructuredScopeOperationsHandler {
      * @throws InterruptedException if the operation is interrupted during task execution
      * @throws ExecutionException   if an error occurs during task execution
      */
-    static CompoundFieldsComparisonResults getGetDetailedFieldsComparisonResult(
-        String file1Path,
-        String file2Path,
-        StructuredTaskScope.ShutdownOnFailure scopeRef
+    static CompoundFieldsComparisonResults getGetCompoundFieldsComparisonResult(
+            String file1Path,
+            String file2Path,
+            StructuredTaskScope.ShutdownOnFailure scopeRef
     ) throws IOException, InterruptedException, ExecutionException {
         var jsonNodes = JsonComparatorOperations.loadJsonNodes(file1Path, file2Path);
         var fields1MapSubtask = scopeRef.fork(() -> JsonTraverser.extractFieldsWithValues(jsonNodes[0]));
@@ -77,10 +77,10 @@ public interface StructuredScopeOperationsHandler {
         var fields1Map = fields1MapSubtask.get();
         var fields2Map = fields2MapSubTask.get();
         var comparisonResult = JsonComparatorOperations.compareFieldsWithValues(
-            file1Path,
-            file2Path,
-            fields1Map,
-            fields2Map
+                file1Path,
+                file2Path,
+                fields1Map,
+                fields2Map
         );
         return new CompoundFieldsComparisonResults(fields1Map, fields2Map, comparisonResult);
     }

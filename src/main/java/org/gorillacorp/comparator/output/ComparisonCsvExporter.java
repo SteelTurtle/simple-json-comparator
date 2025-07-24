@@ -31,34 +31,34 @@ public final class ComparisonCsvExporter {
         try (var scope = new StructuredTaskScope.ShutdownOnFailure();
              var writer = new FileWriter(destinationFilePath);
              var csvPrinter = new CSVPrinter(writer, CSVFormat.Builder
-                 .create()
-                 .setDelimiter(',')
-                 .setAutoFlush(true)
-                 .setHeader(
-                     "Field Name",
-                     "File 1 (%s)".formatted(FileOperations.extractFileName(file1Path)),
-                     "File 2 (%s)".formatted(FileOperations.extractFileName(file2Path)),
-                     "Value in File 1",
-                     "Value in File 2",
-                     "Status",
-                     "Difference"
-                 ).get())
+                     .create()
+                     .setDelimiter(',')
+                     .setAutoFlush(true)
+                     .setHeader(
+                             "Field Name",
+                             "File 1 (%s)".formatted(FileOperations.extractFileName(file1Path)),
+                             "File 2 (%s)".formatted(FileOperations.extractFileName(file2Path)),
+                             "Value in File 1",
+                             "Value in File 2",
+                             "Status",
+                             "Difference"
+                     ).get())
         ) {
             var compoundComparisonResults =
-                StructuredScopeOperationsHandler.getGetDetailedFieldsComparisonResult(
+                    StructuredScopeOperationsHandler.getGetCompoundFieldsComparisonResult(
+                            file1Path,
+                            file2Path,
+                            scope
+                    );
+            var comparisonResult = JsonComparatorOperations.compareFieldsWithValues(
                     file1Path,
                     file2Path,
-                    scope
-                );
-            var comparisonResult = JsonComparatorOperations.compareFieldsWithValues(
-                file1Path,
-                file2Path,
-                compoundComparisonResults.fields1Map(),
-                compoundComparisonResults.fields2Map()
+                    compoundComparisonResults.fields1Map(),
+                    compoundComparisonResults.fields2Map()
             );
-            comparisonResult.fieldStatusList().forEach(fieldStatus -> {
-                FileOperations.writeToCsv(fieldStatus, csvPrinter);
-            });
+            comparisonResult.fieldStatusList().forEach(
+                    fieldStatus -> FileOperations.writeToCsv(fieldStatus, csvPrinter)
+            );
 
         } catch (ExecutionException | InterruptedException exception) {
             StructuredScopeOperationsHandler.handleStructuredTaskScopeException(exception);

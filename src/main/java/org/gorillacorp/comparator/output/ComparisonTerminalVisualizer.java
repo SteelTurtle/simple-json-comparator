@@ -438,7 +438,7 @@ public final class ComparisonTerminalVisualizer {
     public static void displayJsonComparisonReport(String file1Path, String file2Path) throws IOException {
         try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
             var compoundComparisonResults =
-                StructuredScopeOperationsHandler.getGetDetailedFieldsComparisonResult(
+                StructuredScopeOperationsHandler.getGetCompoundFieldsComparisonResult(
                     file1Path,
                     file2Path,
                     scope
