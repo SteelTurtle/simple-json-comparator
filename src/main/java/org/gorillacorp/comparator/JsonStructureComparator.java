@@ -73,9 +73,9 @@ public non-sealed class JsonStructureComparator implements StructuredScopeExcept
                 fields1Map,
                 fields2Map
             );
-            ComparisonReporter.printDetailedComparisonTable(comparisonResult);
-            ComparisonReporter.printSummaryTable(fields1Map.keySet(), fields2Map.keySet(), comparisonResult);
-            ComparisonReporter.printFilePaths(file1Path, file2Path);
+            ComparisonTerminalVisualizer.printDetailedComparisonTable(comparisonResult);
+            ComparisonTerminalVisualizer.printSummaryTable(fields1Map.keySet(), fields2Map.keySet(), comparisonResult);
+            ComparisonTerminalVisualizer.printFilePaths(file1Path, file2Path);
         } catch (ExecutionException | InterruptedException exception) {
             StructuredScopeExceptionHandler.handleStructuredTaskScopeException(exception);
         }

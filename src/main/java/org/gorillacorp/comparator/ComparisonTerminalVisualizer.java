@@ -27,11 +27,11 @@ import static org.slf4j.LoggerFactory.getLogger;
  * ({@code DETAILED_TABLE_WIDTH} and {@code SUMMARY_TABLE_WIDTH}) are automatically
  * calculated based on the column widths and separators.
  */
-public final class ComparisonReporter {
+public final class ComparisonTerminalVisualizer {
 
-    private static final Logger log = getLogger(ComparisonReporter.class);
+    private static final Logger log = getLogger(ComparisonTerminalVisualizer.class);
 
-    private ComparisonReporter() {
+    private ComparisonTerminalVisualizer() {
         throw new IllegalStateException("Utility class");
     }
 
@@ -286,7 +286,7 @@ public final class ComparisonReporter {
      */
     private static int calculateDisplayWidth(String text) {
         if (text == null) return 0;
-        return text.chars().map(ComparisonReporter::getCharacterDisplayWidth).sum();
+        return text.chars().map(ComparisonTerminalVisualizer::getCharacterDisplayWidth).sum();
     }
 
     /**

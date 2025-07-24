@@ -155,6 +155,22 @@ The tool will output:
 - `0`: JSON structures are identical
 - `1`: JSON structures are different or an error occurred
 
+## Generate a GraalVM Native Image
+
+To generate a native `simple-json-comparator` Java application ensure that you
+are using
+a `GraalVM` as your Java Virtual Machine, and that the necessary
+platform-specific build tools
+for your machine are installed (Visual Studio on Windows, Xcode on macOS, gcc
+on Linux).
+Then, generate the native executable with:
+
+```bash
+  ./mvnw clean package -Pnative
+```
+
+The native executable will be stored in the `target` directory of the project
+
 ## Troubleshooting
 
 ### Java Version Issues
