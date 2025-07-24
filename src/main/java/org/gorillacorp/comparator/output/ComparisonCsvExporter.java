@@ -2,7 +2,6 @@ package org.gorillacorp.comparator.output;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.gorillacorp.comparator.exception.CustomJsonParseException;
 import org.gorillacorp.comparator.processor.JsonComparatorOperations;
 import org.gorillacorp.comparator.processor.StructuredScopeOperationsHandler;
 import org.gorillacorp.comparator.utils.FileOperations;
@@ -58,23 +57,13 @@ public final class ComparisonCsvExporter {
                 compoundComparisonResults.fields2Map()
             );
             comparisonResult.fieldStatusList().forEach(fieldStatus -> {
-                try {
-                    csvPrinter.printRecord(
-                        fieldStatus.fieldName(),
-                        fieldStatus.inFile1() ? "Yes" : "No",
-                        fieldStatus.inFile2() ? "Yes" : "No",
-                        fieldStatus.value1(),
-                        fieldStatus.value2(),
-                        fieldStatus.status(),
-                        fieldStatus.difference()
-                    );
-                } catch (IOException e) {
-                    throw new CustomJsonParseException("Error writing to CSV file", e);
-                }
+                FileOperations.writeToCsv(fieldStatus, csvPrinter);
             });
 
         } catch (ExecutionException | InterruptedException exception) {
             StructuredScopeOperationsHandler.handleStructuredTaskScopeException(exception);
         }
     }
+
+
 }

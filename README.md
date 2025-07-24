@@ -30,6 +30,7 @@ The tool currently provides the following features:
 - **Formatted Output**: Displays comparison results in well-formatted tables:
   - Detailed field-by-field comparison
   - Summary statistics (total fields, common fields, unique fields)
+- **CSV Export**: Exports comparison results to a CSV file for further analysis or reporting
 - **Special Type Handling**: Provides special handling for binary data and POJOs
 
 ## Quick Start (Recommended)
@@ -92,6 +93,12 @@ The `comparator_run.sh` script automatically:
   ./comparator_run.sh data1.json data2.json
 ```
 
+#### Export comparison results to CSV:
+
+```bash
+  ./comparator_run.sh data1.json data2.json -export-to-csv output.csv
+```
+
 #### Force rebuild of the JAR application:
 
 ```bash
@@ -141,14 +148,36 @@ JSON files to compare:
   java --enable-preview -jar json-structure-comparator-1.0.0.jar file1.json file2.json
 ```
 
+To export the comparison results to a CSV file:
+
+```bash
+  java --enable-preview -jar json-structure-comparator-1.0.0.jar file1.json file2.json -export-to-csv output.csv
+```
+
 ## Output
 
-The tool will output:
+### Terminal Output
+
+When running without the CSV export option, the tool will output to the terminal:
 
 1. A detailed comparison table showing each field, its presence in both files,
    values, and differences
 2. A summary table with statistics about common and unique fields
 3. The file paths that were compared
+
+### CSV Output
+
+When using the `-export-to-csv` option, the tool will generate a CSV file with the following columns:
+
+1. **Field Name**: The hierarchical path of the field
+2. **File 1**: Whether the field exists in the first file (Yes/No)
+3. **File 2**: Whether the field exists in the second file (Yes/No)
+4. **Value in File 1**: The value of the field in the first file
+5. **Value in File 2**: The value of the field in the second file
+6. **Status**: The comparison status of the field (IDENTICAL, DIFFERENT, ONLY_IN_FILE1, ONLY_IN_FILE2)
+7. **Difference**: Description of the difference between the values
+
+The CSV file can be opened in spreadsheet applications like Microsoft Excel or Google Sheets for further analysis, filtering, or reporting.
 
 ### Exit Codes
 
@@ -200,7 +229,7 @@ Future enhancements may include:
 
 - Support for ignoring specific fields during comparison
 - Custom comparison rules for specific data types
-- Output in different formats (JSON, CSV, HTML)
+- Output in additional formats (JSON, HTML)
 - Integration with CI/CD pipelines
 - GUI interface
 
