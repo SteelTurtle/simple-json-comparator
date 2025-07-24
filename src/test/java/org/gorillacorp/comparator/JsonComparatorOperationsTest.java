@@ -1,5 +1,6 @@
 package org.gorillacorp.comparator;
 
+import org.gorillacorp.comparator.processor.JsonComparatorOperations;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

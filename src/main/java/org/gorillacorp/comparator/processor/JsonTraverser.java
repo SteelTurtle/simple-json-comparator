@@ -1,4 +1,4 @@
-package org.gorillacorp.comparator;
+package org.gorillacorp.comparator.processor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.gorillacorp.comparator.utils.IOExceptionConsumer;
