@@ -222,6 +222,18 @@ If the build fails, try forcing a clean rebuild:
   ./comparator_run.sh --force-rebuild file1.json file2.json
 ```
 
+## Changelog
+v1.0.0 (August 2025)
+- Initial release
+- Supports basic structure comparison
+- Supports detailed field comparison
+- Supports hierarchical field paths
+- Supports CSV export
+- Java 24 (preview) Structured Concurrency 
+
+v1.0.1 (October 2025)
+- Updated to Java 25 (preview) Structured Concurrency
+
 ## Note
 
 This tool is a work in progress, and the functionality may change over time.

@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 
+import static java.util.concurrent.StructuredTaskScope.open;
 import static org.gorillacorp.comparator.utils.ReportFormattingConstants.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -436,7 +436,7 @@ public final class ComparisonTerminalVisualizer {
      * @throws IOException if there is an issue reading the files
      */
     public static void displayJsonComparisonReport(String file1Path, String file2Path) throws IOException {
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+        try (var scope = open(StructuredTaskScope.Joiner.allSuccessfulOrThrow())) {
             var compoundComparisonResults =
                 StructuredScopeOperationsHandler.getGetCompoundFieldsComparisonResult(
                     file1Path,
@@ -450,7 +450,8 @@ public final class ComparisonTerminalVisualizer {
                 compoundComparisonResults.comparisonResult()
             );
             ComparisonTerminalVisualizer.printFilePaths(file1Path, file2Path);
-        } catch (ExecutionException | InterruptedException exception) {
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
             StructuredScopeOperationsHandler.handleStructuredTaskScopeException(exception);
         }
     }

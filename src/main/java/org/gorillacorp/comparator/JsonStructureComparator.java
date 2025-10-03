@@ -9,10 +9,15 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Main class for comparing JSON structures.
  * This class serves as the entry point for the application and orchestrates the comparison process.
  */
-public class JsonStructureComparator {
+public final class JsonStructureComparator {
     private static final Logger log = getLogger(JsonStructureComparator.class);
 
-    public static void main(String... args) {
+    private JsonStructureComparator() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    // FIXME: Potential Traversal Attack vulnerability due to uncontrolled input
+    static void main(String... args) {
         if (args.length < 2 || args.length > 4) {
             log.error(CliArgumentsParser.USAGE);
             System.exit(1);

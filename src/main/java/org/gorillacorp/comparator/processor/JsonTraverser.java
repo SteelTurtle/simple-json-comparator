@@ -129,11 +129,11 @@ public final class JsonTraverser {
 
     private static void traverseObjectFields(JsonNode objectNode, String path, Map<String, String> accumulator) {
         objectNode.fieldNames().forEachRemaining(IOExceptionConsumer.wrapIOException(
-                fieldName -> {
-                    var fullPath = path.isEmpty() ? fieldName : "%s.%s".formatted(path, fieldName);
-                    var fieldValue = objectNode.get(fieldName);
-                    traverseWithValues(fieldValue, fullPath, accumulator);
-                })
+            fieldName -> {
+                var fullPath = path.isEmpty() ? fieldName : "%s.%s".formatted(path, fieldName);
+                var fieldValue = objectNode.get(fieldName);
+                traverseWithValues(fieldValue, fullPath, accumulator);
+            })
         );
     }
 

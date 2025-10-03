@@ -11,10 +11,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+
+import static java.util.concurrent.StructuredTaskScope.open;
 
 /**
  * Utility class for comparing JSON structures.
@@ -41,15 +42,15 @@ public final class JsonComparatorOperations {
     public static boolean compareJson(String filePath1, String filePath2) throws IOException {
         try (var reader1 = Files.newBufferedReader(Path.of(filePath1));
              var reader2 = Files.newBufferedReader(Path.of(filePath2));
-             var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+             var scope = open(StructuredTaskScope.Joiner.allSuccessfulOrThrow())) {
             var jsonNode1SubTask = scope.fork(() -> mapper.readTree(reader1));
             var jsonNode2SubTask = scope.fork(() -> mapper.readTree(reader2));
             scope.join();
-            scope.throwIfFailed();
 
             return compareJsonNodesIgnoringOrder(jsonNode1SubTask.get(), jsonNode2SubTask.get());
-        } catch (ExecutionException | InterruptedException exception) {
+        } catch (InterruptedException exception) {
             StructuredScopeOperationsHandler.handleStructuredTaskScopeException(exception);
+            Thread.currentThread().interrupt();
             throw new AssertionError("This code should never be reached");
         }
     }
@@ -145,14 +146,14 @@ public final class JsonComparatorOperations {
 
         try (var reader1 = Files.newBufferedReader(Path.of(file1Path));
              var reader2 = Files.newBufferedReader(Path.of(file2Path));
-             var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+             var scope = open(StructuredTaskScope.Joiner.allSuccessfulOrThrow())) {
             var json1Subtask = scope.fork(() -> mapper.readTree(reader1));
             var json2Subtask = scope.fork(() -> mapper.readTree(reader2));
             scope.join();
-            scope.throwIfFailed();
             return new JsonNode[]{json1Subtask.get(), json2Subtask.get()};
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (InterruptedException e) {
             StructuredScopeOperationsHandler.handleStructuredTaskScopeException(e);
+            Thread.currentThread().interrupt();
             throw new AssertionError("This code should never be reached");
         }
     }

@@ -16,23 +16,23 @@ class ComparisonCsvExporterTest {
     @Test
     @DisplayName("Tests that valid input files are successfully processed and the CSVPrinter writes the expected entries.")
     void testExportJsonComparisonReportToCsv_validInputs(@TempDir Path tempDir)
-            throws IOException {
+        throws IOException {
         // Create test JSON files
         String json1Content = """
-                {
-                    "name": "John",
-                    "age": 30,
-                    "city": "New York"
-                }
-                """;
+            {
+                "name": "John",
+                "age": 30,
+                "city": "New York"
+            }
+            """;
 
         String json2Content = """
-                {
-                    "name": "Jane",
-                    "age": 25,
-                    "city": "Boston"
-                }
-                """;
+            {
+                "name": "Jane",
+                "age": 25,
+                "city": "Boston"
+            }
+            """;
 
         // generate an in-memory temporary file:
         Path file1 = tempDir.resolve("test1.json");
@@ -44,9 +44,9 @@ class ComparisonCsvExporterTest {
 
         // Test the method
         assertDoesNotThrow(() -> ComparisonCsvExporter.exportJsonComparisonReportToCsv(
-                file1.toString(),
-                file2.toString(),
-                outputFile.toString()
+            file1.toString(),
+            file2.toString(),
+            outputFile.toString()
         ));
 
         // Verify the output file was created
